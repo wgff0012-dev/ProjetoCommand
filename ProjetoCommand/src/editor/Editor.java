@@ -1,6 +1,6 @@
-package refactoring_guru.command.editor;
+package editor;
 
-import refactoring_guru.command.commands.*;
+import commands.*;
 
 import javax.swing.*;
 import java.awt.*;
