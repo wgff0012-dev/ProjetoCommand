@@ -2,7 +2,7 @@ package main;
 
 import editor.Editor;
 
-public class Demo {
+public class main {
 
     public static void main(String[] args) {
 
