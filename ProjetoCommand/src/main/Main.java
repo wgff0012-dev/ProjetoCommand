@@ -1,10 +1,13 @@
 package main;
 
-public class Main {
+import editor.Editor;
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+public class Demo {
 
-	}
+    public static void main(String[] args) {
 
+        Editor editor = new Editor();
+        editor.init();
+
+    }
 }
