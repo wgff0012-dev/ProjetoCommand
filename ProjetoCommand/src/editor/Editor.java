@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+// abaixo configura a janela, o texto e os botões
 public class Editor {
     public JTextArea textField;
     public String clipboard;
@@ -27,24 +28,32 @@ public class Editor {
         JButton ctrlV = new JButton("Ctrl+V");
         JButton ctrlZ = new JButton("Ctrl+Z");
         Editor editor = this;
+
+        // configura o CTRL+C
         ctrlC.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 executeCommand(new CopyCommand(editor));
             }
         });
+
+        // CTRL+X
         ctrlX.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 executeCommand(new CutCommand(editor));
             }
         });
+
+        // CTRL+V
         ctrlV.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 executeCommand(new PasteCommand(editor));
             }
         });
+
+        // e o CTRL+Z
         ctrlZ.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -61,12 +70,14 @@ public class Editor {
         frame.setVisible(true);
     }
 
+    //caso alterar o estado (retorne true), adiciona o comando executado no histórico
     private void executeCommand(Command command) {
         if (command.execute()) {
             history.push(command);
         }
     }
 
+    // retira o último comando do histórico e faz o inverso (desfazer)
     private void undo() {
         if (history.isEmpty()) return;
 
