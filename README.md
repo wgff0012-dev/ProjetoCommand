@@ -10,9 +10,11 @@ Este projeto foi desenvolvido para fins acadêmicos, com o objetivo de demonstra
 
 1. [Explicação do projeto](#1-explicação-do-projeto)
 2. [Justificativa do padrão escolhido](#2-justificativa-do-padrão-escolhido)
-3. [Estrutura do projeto](#3-estrutura-do-projeto)
-4. [Como executar](#4-como-executar)
-5. [Integrantes](#5-integrantes)
+3. [Exemplos do cotidiano](#3-exemplos-do-cotidiano)
+4. [Princípios SOLID aplicados](#4-princípios-solid-aplicados)
+5. [Estrutura do projeto](#5-estrutura-do-projeto)
+6. [Como executar](#6-como-executar)
+7. [Integrantes](#7-integrantes)
 
 ---
 
@@ -61,26 +63,80 @@ O padrão **Command** encapsula uma requisição como um objeto, permitindo para
 - **Desacoplamento entre interface e lógica.** Os botões não conhecem a lógica de copiar, recortar ou colar. Eles apenas criam e executam um comando. Assim, a interface pode ser alterada (por exemplo, adicionando atalhos de teclado ou itens de menu) sem modificar a implementação das operações.
 - **Suporte natural ao desfazer.** Como cada ação é um objeto, é possível armazená-lo em uma pilha e invocar seu `undo()` posteriormente. Sem o padrão, o histórico precisaria ser mantido de forma improvisada dentro da própria interface.
 - **Reutilização.** O mesmo comando pode ser associado a vários elementos de interface (botão, menu, atalho) sem duplicação de código.
-- **Extensibilidade (princípio aberto/fechado).** Novas operações, como "negrito", "localizar e substituir" ou "refazer", podem ser adicionadas criando-se novas subclasses de `Command`, sem alterar as existentes.
+- **Extensibilidade.** Novas operações, como "negrito", "localizar e substituir" ou "refazer", podem ser adicionadas criando-se novas subclasses de `Command`, sem alterar as existentes.
 - **Responsabilidade única.** Cada classe de comando é responsável por uma única operação, o que facilita a leitura, a manutenção e os testes.
 
-### 2.2 Padrões alternativos
+### 2.2 Outros padrões que poderiam resolver o problema
 
 Outros padrões poderiam ser empregados, total ou parcialmente, para resolver o mesmo problema:
 
-| Padrão alternativo | Como poderia ser usado | Limitações em relação ao Command |
-|--------------------|------------------------|----------------------------------|
-| **Memento** | Salvar *snapshots* completos do estado do editor a cada alteração e restaurá-los ao desfazer. | Resolve bem o desfazer, mas não estrutura as operações em si. Isso significa que o desacoplamento entre interface e ações permaneceria um problema em aberto. Na prática, os dois padrões são frequentemente combinados, e o próprio projeto utiliza uma ideia semelhante ao Memento ao guardar o texto anterior no atributo `backup` de cada comando. |
-| **Strategy** | Encapsular cada operação como uma estratégia intercambiável. | Estruturalmente parecido com o Command, mas com intenção diferente: o Strategy troca *algoritmos* de uma mesma tarefa, enquanto o Command representa *requisições* que podem ser armazenadas, enfileiradas e desfeitas. Não oferece, por si só, a noção de histórico. |
+| Padrão alternativo | Como poderia ser usado | Semelhanças e limitações em relação ao Command |
+|--------------------|------------------------|------------------------------------------------|
+| **Memento** | Salvar *snapshots* do estado do editor a cada alteração e restaurá-los ao desfazer. | Resolve bem o desfazer, mas não estrutura as operações em si, de modo que o desacoplamento entre interface e ações permaneceria em aberto. Na prática, os dois padrões são frequentemente combinados, e o próprio projeto utiliza uma ideia semelhante ao Memento ao guardar o texto anterior no atributo `backup` de cada comando. |
+| **Strategy** | Encapsular cada operação como uma estratégia intercambiável, escolhida em tempo de execução. | Estruturalmente muito parecido com o Command (objetos que encapsulam comportamento e são chamados por um contexto), mas com intenção diferente: o Strategy troca *algoritmos* de uma mesma tarefa, enquanto o Command representa *requisições* que podem ser armazenadas, enfileiradas e desfeitas. Não oferece, por si só, a noção de histórico. |
 | **Template Method** | Definir em uma classe base o esqueleto do fluxo (fazer backup, executar, registrar) e deixar as subclasses preencherem os passos. | Poderia complementar o Command (a classe abstrata `Command` já se aproxima disso), mas isoladamente não desacopla o solicitante do executor. |
-| **Chain of Responsibility** | Encadear manipuladores que decidem quem processa cada ação do usuário. | Útil quando várias partes podem tratar uma mesma requisição, o que não é o caso aqui, pois cada botão corresponde a exatamente uma operação. |
+| **Chain of Responsibility** | Encadear manipuladores que decidem quem processa cada ação do usuário. | Também desacopla quem solicita de quem executa, mas é mais útil quando várias partes podem tratar a mesma requisição, o que não é o caso aqui, pois cada botão corresponde a exatamente uma operação. |
 | **Sem padrão (lógica nos *listeners*)** | Implementar cada operação diretamente nos eventos dos botões. | Funciona para um exemplo muito simples, mas mistura interface e lógica, dificulta o desfazer e não escala com a adição de novas funcionalidades. |
 
 Conclui-se que o Command é a escolha mais adequada por atender simultaneamente aos dois requisitos centrais do problema (desacoplar as ações da interface e permitir desfazê-las), sendo que o Memento seria a alternativa mais plausível, preferencialmente em combinação com o Command, e não em substituição a ele.
 
 ---
 
-## 3. Estrutura do projeto
+## 3. Exemplos do cotidiano
+
+O padrão Command aparece em diversas situações do dia a dia. Em todas elas, existe quem *pede* uma ação, quem *registra e entrega* o pedido e quem *efetivamente executa*.
+
+### 3.1 Restaurante: o garçom e a comanda
+
+| Situação real                              | Papel no padrão |
+|--------------------------------------------|-----------------|
+| A comanda com o pedido ("uma pizza")       | **Command**: o pedido transformado em um objeto que pode ser anotado, repassado e guardado |
+| O garçom                                   | **Invoker**: leva a comanda à cozinha sem saber preparar o prato |
+| O cozinheiro                               | **Receiver**: quem de fato executa o pedido |
+| O cliente                                  | **Client**: quem cria o pedido |
+| Cancelar um pedido anotado                 | **Desfazer (`undo`)** |
+
+O garçom não precisa saber cozinhar, e o cozinheiro não precisa conversar com o cliente. A comanda é o objeto que liga os dois, assim como o comando liga o botão ao editor.
+
+### 3.2 Controle remoto e assistente de voz
+
+| Situação real                                                   | Papel no padrão |
+|-----------------------------------------------------------------|-----------------|
+| Cada botão do controle ("ligar", "aumentar volume")             | **Invoker**: dispara a ação sem saber como a TV funciona |
+| A ordem "aumentar volume" (ou "Alexa, acenda a luz")            | **Command** |
+| A TV, o ar-condicionado ou a lâmpada                            | **Receiver** |
+| Controles universais com botões programáveis                    | **Parametrização do invoker por comandos**: o mesmo botão pode receber comandos diferentes |
+
+Um controle universal funciona com qualquer aparelho justamente porque o botão só conhece a ideia de "executar um comando", e não os detalhes de cada aparelho.
+
+### 3.3 Desfazer em editores e aplicativos
+
+O "desfazer" (Ctrl+Z) do Word, do Photoshop ou de uma planilha funciona guardando cada ação em um histórico. Cada ação é um objeto que sabe se refazer e se desfazer, e as ações são desfeitas na ordem inversa (a última feita é a primeira desfeita). É exatamente o mecanismo implementado neste projeto.
+
+### 3.4 Outros exemplos
+
+- **Fila de impressão:** cada documento enviado é um comando que fica enfileirado até a impressora executá-lo.
+- **Agendador de tarefas:** tarefas programadas para executar mais tarde são comandos guardados com um horário.
+
+---
+
+## 4. Princípios SOLID aplicados
+
+Os princípios SOLID são cinco diretrizes de projeto orientado a objetos. Os que melhor se encaixam no padrão Command são, em ordem de aderência:
+
+| Sigla | Princípio | Aderência | Onde aparece no projeto |
+|-------|-----------|-----------|--------------------------|
+| **S** | *Single Responsibility* (Responsabilidade Única) | Alta | Cada comando faz uma única coisa: `CopyCommand` copia, `CutCommand` recorta, `PasteCommand` cola. `CommandHistory` apenas guarda o histórico. |
+| **O** | *Open/Closed* (Aberto/Fechado) | Alta | Para criar uma nova operação (por exemplo, "negrito"), basta criar uma nova subclasse de `Command`, sem alterar as classes existentes. |
+| **L** | *Liskov Substitution* (Substituição de Liskov) | Média/Alta | `executeCommand` e `CommandHistory` tratam qualquer subclasse como um `Command`, sem distinguir qual é. Qualquer comando pode substituir outro. |
+| **D** | *Dependency Inversion* (Inversão de Dependência) | Parcial | O fluxo de execução e o histórico dependem da abstração `Command`, e não das classes concretas. Porém, os botões ainda instanciam diretamente os comandos concretos (`new CopyCommand(editor)`), e `Command` depende da classe concreta `Editor`. |
+| **I** | *Interface Segregation* (Segregação de Interfaces) | Baixa | A abstração `Command` é pequena (`execute` e `undo`), mas o princípio não é o foco do padrão neste projeto. |
+
+**Conclusão:** os princípios que mais se destacam no Command são o **S** e o **O**, seguidos pelo **L** e, de forma parcial, pelo **D**.
+
+---
+
+## 5. Estrutura do projeto
 
 ```
 ProjetoCommand/
@@ -93,13 +149,14 @@ ProjetoCommand/
     │   └── PasteCommand.java     # Comando de colar
     ├── editor/
     │   └── Editor.java           # Interface gráfica, invocador e receptor
-    └── main/
-        └── Main.java             # Ponto de entrada da aplicação
+    ├── main/
+    │   └── Main.java             # Ponto de entrada da aplicação
+    └── module-info.java          # Declaração do módulo (requer java.desktop)
 ```
 
 ---
 
-## 4. Como executar
+## 6. Como executar
 
 ### Requisitos
 
@@ -115,7 +172,7 @@ ProjetoCommand/
 
 ---
 
-## 5. Integrantes
+## 7. Integrantes
 
 - Nicolas Nery da Silva Feitosa
 - William Gabriel Felix Farias
